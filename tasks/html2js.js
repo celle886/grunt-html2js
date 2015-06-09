@@ -219,24 +219,36 @@ module.exports = function(grunt) {
         throw new Error("When using singleModule: true be sure to specify a (target) module");
       }
 
-      if (options.singleModule) {
-        if (options.target === 'js') {
-          bundle = "angular.module('" + targetModule + "', []).run(['$templateCache', function($templateCache) {\n" + strict;
-          modules += '\n}]);\n';
-        } else if (options.target === 'coffee') {
-          bundle = "angular.module('" + targetModule + "', []).run(['$templateCache', ($templateCache) ->\n";
-          modules += '\n])\n';
-        }
-      } else if (targetModule) {
-        //Allow a 'no targetModule if module is null' option
-        bundle = "angular.module('" + targetModule + "', [" + moduleNames.join(', ') + "])";
-        if (options.target === 'js') {
-          bundle += ';';
-        }
+      if (options.useAppJS){
 
-        bundle += "\n\n";
+          var existingAppJsFile = grunt.file.read(options.useAppJS);
+
+          var newAppJSFile = existingAppJsFile.substring(0, existingAppJsFile.indexOf('$templateCache.put(')) + modules + '\n\n});';
+
+          console.log(newAppJSFile);
+
+          grunt.file.write(options.useAppJS, grunt.util.normalizelf(newAppJSFile));
+
+      } else {
+        if (options.singleModule) {
+          if (options.target === 'js') {
+            bundle = "angular.module('" + targetModule + "', []).run(['$templateCache', function($templateCache) {\n" + strict;
+            modules += '\n}]);\n';
+          } else if (options.target === 'coffee') {
+            bundle = "angular.module('" + targetModule + "', []).run(['$templateCache', ($templateCache) ->\n";
+            modules += '\n])\n';
+          }
+        } else if (targetModule) {
+          //Allow a 'no targetModule if module is null' option
+          bundle = "angular.module('" + targetModule + "', [" + moduleNames.join(', ') + "])";
+          if (options.target === 'js') {
+            bundle += ';';
+          }
+
+          bundle += "\n\n";
+        }
+        grunt.file.write(f.dest, grunt.util.normalizelf(fileHeader + bundle + modules + fileFooter));
       }
-      grunt.file.write(f.dest, grunt.util.normalizelf(fileHeader + bundle + modules + fileFooter));
     }
 
     this.files.forEach(generateModule);
