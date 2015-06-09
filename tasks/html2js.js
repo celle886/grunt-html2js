@@ -128,6 +128,14 @@ module.exports = function(grunt) {
 
   grunt.registerMultiTask('html2js', 'Compiles Angular-JS templates to JavaScript.', function() {
 
+    function writeExistingFile (modules){
+      var existingAppJsFile = grunt.file.read(options.useAppJS),
+          newAppJSFile = existingAppJsFile.substring(0, existingAppJsFile.indexOf('$templateCache.put(')) + modules + '\n\n});';
+
+      grunt.file.write(options.useAppJS, grunt.util.normalizelf(newAppJSFile));
+    }
+
+  
     var options = this.options({
       base: 'src',
       module: 'templates-' + this.target,
@@ -142,6 +150,10 @@ module.exports = function(grunt) {
       singleModule: false,
       watch: false
     });
+
+    if (options.serveMode){
+      return writeExistingFile('$templateCache.put("dummy.html", "")');
+    }
 
     var counter = 0;
     var target = this.target;
@@ -221,13 +233,7 @@ module.exports = function(grunt) {
 
       if (options.useAppJS){
 
-          var existingAppJsFile = grunt.file.read(options.useAppJS);
-
-          var newAppJSFile = existingAppJsFile.substring(0, existingAppJsFile.indexOf('$templateCache.put(')) + modules + '\n\n});';
-
-          console.log(newAppJSFile);
-
-          grunt.file.write(options.useAppJS, grunt.util.normalizelf(newAppJSFile));
+          writeExistingFile(modules);
 
       } else {
         if (options.singleModule) {
